@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model PositiveItem {
+  id        String   @id @default(uuid())
+  text      String
+  category  String? 
+  tags      String? 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessionLinks SessionPositive[]
+}
+
+model DownSession {
+  id        String   @id @default(uuid())
+  reasonText String
+  mood      Int?
+  createdAt DateTime @default(now())
+
+  positives SessionPositive[]
+  journal   JournalEntry?
+}
+
+model SessionPositive {
+  id         String   @id @default(uuid())
+  sessionId  String
+  positiveId String
+
+  session  DownSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  positive PositiveItem @relation(fields: [positiveId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([positiveId])
+  @@unique([sessionId, positiveId])
+}
+
+model JournalEntry {
+  id        String   @id @default(uuid())
+  sessionId String   @unique
+  bodyText  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  session DownSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
